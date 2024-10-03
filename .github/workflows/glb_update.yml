@@ -3,9 +3,12 @@ name: GLB File Update Automation
 on:
   push:
     branches:
-      - 'glb_update'
+      - 'glb_update'  # Updated branch name
     paths:
       - 'assets/models/*.glb'
+
+permissions:
+  contents: write  # Grant GITHUB_TOKEN write permissions
 
 jobs:
   deploy:
@@ -13,10 +16,10 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4  # Updated to the latest version
+        uses: actions/checkout@v4
         with:
           ref: ${{ github.ref }}
-          fetch-depth: 2  # Fetch the last two commits to enable git diff
+          fetch-depth: 2  # Fetch the last two commits
 
       - name: Parse FTP Credentials
         id: ftp_creds
@@ -41,7 +44,7 @@ jobs:
       - name: Update Main HTML File
         if: steps.get_glb_files.outputs.updated_glb_file != ''
         run: |
-          MAIN_HTML_FILE="AframeTest.html"  # Adjust if your HTML file is in a different location
+          MAIN_HTML_FILE="AframeTest.html"  # Update with the correct path if necessary
           GLB_FILENAME=$(basename "${{ steps.get_glb_files.outputs.updated_glb_file }}")
           echo "Updating HTML file to use GLB file: $GLB_FILENAME"
           # Update the gltf-model attribute in the HTML file
@@ -49,25 +52,23 @@ jobs:
           # Show the updated line for verification
           grep 'gltf-model' "$MAIN_HTML_FILE"
 
-      # Optional: Commit and Push Changes Back to the Repository
       - name: Commit and Push Changes
         if: steps.get_glb_files.outputs.updated_glb_file != ''
-        uses: stefanzweifel/git-auto-commit-action@v5  # Updated to the latest version
+        uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: 'Update main HTML file to reference new GLB model'
-          branch: ${{ github.ref }}
+          branch: glb_update  # Updated branch name
           file_pattern: AframeTest.html
-          # Personal access token with repo permissions is required
-          token: ${{ secrets.GITHUB_TOKEN }}
+          # No need to specify 'token'; the action uses GITHUB_TOKEN by default
 
       - name: Deploy via FTP
-        uses: SamKirkland/FTP-Deploy-Action@4.3.1  # Updated to the latest version
+        uses: SamKirkland/FTP-Deploy-Action@4.3.1
         with:
           server: ${{ steps.ftp_creds.outputs.server }}
           username: ${{ steps.ftp_creds.outputs.username }}
           password: ${{ steps.ftp_creds.outputs.password }}
           protocol: ftp
-          local-dir: .  # Deploy all files in the repository
-          server-dir: /public_html  # Adjust to your server's web root or desired directory
+          local-dir: .  # Deploy all files
+          server-dir: /public_html  # Adjust to your server's directory
           concurrency: 10
           security: false
