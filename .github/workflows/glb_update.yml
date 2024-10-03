@@ -3,7 +3,7 @@ name: GLB File Update Automation
 on:
   push:
     branches:
-      - 'assets-glb'
+      - 'glb_update'
     paths:
       - 'assets/models/*.glb'
 
@@ -65,6 +65,6 @@ jobs:
           password: ${{ steps.ftp_creds.outputs.password }}
           protocol: ftp
           local-dir: .  # Deploy all files in the repository
-          server-dir: /public_html  # Adjust to your server's web root or desired directory
+          server-dir: /public_html/assets/models  # Adjust to your server's web root or desired directory
           concurrency: 10
           security: false
