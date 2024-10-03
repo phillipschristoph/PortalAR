@@ -1,0 +1,45 @@
+name: GLB File Update Automation
+
+on:
+  push:
+    branches:
+      - 'assets-glb'
+    paths:
+      - 'assets/models/*.glb'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Parse FTP Credentials
+        id: ftp_creds
+        run: |
+          echo "::set-output name=password::$(echo '${{ secrets.SIMPLE_FTP }}' | jq -r '.name')"
+          echo "::set-output name=server::$(echo '${{ secrets.SIMPLE_FTP }}' | jq -r '.host')"
+          echo "::set-output name=password::$(echo '${{ secrets.SIMPLE_FTP }}' | jq -r '.port')"
+          echo "::set-output name=password::$(echo '${{ secrets.SIMPLE_FTP }}' | jq -r '.type')"
+          echo "::set-output name=username::$(echo '${{ secrets.SIMPLE_FTP }}' | jq -r '.username')"
+          echo "::set-output name=password::$(echo '${{ secrets.SIMPLE_FTP }}' | jq -r '.password')"
+          echo "::set-output name=password::$(echo '${{ secrets.SIMPLE_FTP }}' | jq -r '.path')"
+          echo "::set-output name=password::$(echo '${{ secrets.SIMPLE_FTP }}' | jq -r '.autosave')"
+          echo "::set-output name=password::$(echo '${{ secrets.SIMPLE_FTP }}' | jq -r '.confirm')"
+
+
+
+      - name: Deploy via FTP
+        uses: SamKirkland/FTP-Deploy-Action@4.3.0
+        with:
+          server: ${{ steps.ftp_creds.outputs.server }}
+          username: ${{ steps.ftp_creds.outputs.username }}
+          password: ${{ steps.ftp_creds.outputs.password }}
+          protocol: ftp
+          local-dir: assets/models
+          server-dir: /public_html/assets/models
+          concurrency: 10
+          security: false
