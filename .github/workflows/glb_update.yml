@@ -1,0 +1,70 @@
+name: GLB File Update Automation
+
+on:
+  push:
+    branches:
+      - 'glb_update'
+    paths:
+      - 'assets/models/*.glb'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Parse FTP Credentials
+        id: ftp_creds
+        shell: bash
+        run: |
+          echo '${{ secrets.SIMPLE_FTP }}' > ftp_creds.json
+          server=$(jq -r '.[0].host' ftp_creds.json)
+          username=$(jq -r '.[0].username' ftp_creds.json)
+          password=$(jq -r '.[0].password' ftp_creds.json)
+          echo "server=$server" >> $GITHUB_OUTPUT
+          echo "username=$username" >> $GITHUB_OUTPUT
+          echo "password=$password" >> $GITHUB_OUTPUT
+
+      - name: Get Updated GLB Files
+        id: get_glb_files
+        run: |
+          git diff --name-only ${{ github.event.before }} ${{ github.sha }} -- assets/models/*.glb > updated_glb_files.txt
+          UPDATED_GLB_FILE=$(cat updated_glb_files.txt | head -n 1)
+          echo "Updated GLB file: $UPDATED_GLB_FILE"
+          echo "updated_glb_file=$UPDATED_GLB_FILE" >> $GITHUB_OUTPUT
+
+      - name: Update Main HTML File
+        if: steps.get_glb_files.outputs.updated_glb_file != ''
+        run: |
+          MAIN_HTML_FILE="AframeTest.html"  # Adjust the path if your HTML file is located elsewhere
+          GLB_FILENAME=$(basename "${{ steps.get_glb_files.outputs.updated_glb_file }}")
+          echo "Updating HTML file to use GLB file: $GLB_FILENAME"
+          # Update the gltf-model attribute in the HTML file
+          sed -i 's|gltf-model="[^"]*"|gltf-model="assets/models/'"$GLB_FILENAME"'"|g' "$MAIN_HTML_FILE"
+          # Show the updated line for verification
+          grep 'gltf-model' "$MAIN_HTML_FILE"
+
+      # Optional: Commit and push changes back to the repository
+      - name: Commit and Push Changes
+        if: steps.get_glb_files.outputs.updated_glb_file != ''
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: 'Update main HTML file to reference new GLB model'
+          branch: ${{ github.ref }}
+          file_pattern: index.html
+
+      - name: Deploy via FTP
+        uses: SamKirkland/FTP-Deploy-Action@4.3.0
+        with:
+          server: ${{ steps.ftp_creds.outputs.server }}
+          username: ${{ steps.ftp_creds.outputs.username }}
+          password: ${{ steps.ftp_creds.outputs.password }}
+          protocol: ftp
+          local-dir: .  # Deploy all files in the repository
+          server-dir: /public_html/assets/models  # Adjust to your server's web root or desired directory
+          concurrency: 10
+          security: false
