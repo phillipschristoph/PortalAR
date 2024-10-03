@@ -64,11 +64,11 @@ jobs:
       - name: Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@4.3.1
         with:
-          server: ${{ steps.ftp_creds.outputs.server }}
-          username: ${{ steps.ftp_creds.outputs.username }}
-          password: ${{ steps.ftp_creds.outputs.password }}
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
           protocol: ftp
-          local-dir: .  # Deploy all files
-          server-dir: /public_html  # Adjust to your server's directory
-          concurrency: 10
-          security: false
+          port: ${{ secrets.FTP_PORT }}
+          local-dir: assets/models  # Directory in your repository to upload
+          server-dir: ${{ secrets.FTP_PATH }}  # Remote directory on your FTP server
+          security: loose  # Set to 'loose' or 'strict' as appropriate
