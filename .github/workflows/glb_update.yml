@@ -69,6 +69,6 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           protocol: ftp
           port: ${{ secrets.FTP_PORT }}
-          local-dir: assets/models  # Directory in your repository to upload
+          local-dir: assets/models/  # Directory in your repository to upload
           server-dir: ${{ secrets.FTP_PATH }}  # Remote directory on your FTP server
           security: loose  # Set to 'loose' or 'strict' as appropriate
