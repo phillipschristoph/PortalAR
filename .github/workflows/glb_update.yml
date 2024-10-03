@@ -3,7 +3,7 @@ name: GLB File Update Automation
 on:
   push:
     branches:
-      - 'assets-glb'
+      - 'glb_update'
     paths:
       - 'assets/models/*.glb'
 
