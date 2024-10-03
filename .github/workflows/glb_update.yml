@@ -3,7 +3,7 @@ name: GLB File Update Automation
 on:
   push:
     branches:
-      - 'glb_update'  # Updated branch name
+      - 'glb_update'  # Your branch name
     paths:
       - 'assets/models/*.glb'
 
@@ -57,9 +57,13 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: 'Update main HTML file to reference new GLB model'
-          branch: glb_update  # Updated branch name
+          branch: glb_update  # Your branch name
           file_pattern: AframeTest.html
-          # No need to specify 'token'; the action uses GITHUB_TOKEN by default
+
+      - name: Reset Repository to Latest Commit
+        if: steps.get_glb_files.outputs.updated_glb_file != ''
+        run: |
+          git reset --hard HEAD
 
       - name: Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@4.3.1
@@ -69,12 +73,6 @@ jobs:
           password: ${{ steps.ftp_creds.outputs.password }}
           protocol: ftp
           port: ${{ secrets.FTP_PORT }}
-          local-dir: ./  # Root directory
-          server-dir: ${{ secrets.FTP_PATH }}
+          local-dir: ./  # Root directory with trailing slash
+          server-dir: ${{ secrets.FTP_PATH }}  # Remote directory on your FTP server
           security: loose
-          exclude: |
-            .git*
-            .github*
-            README.md
-            docs/
-
