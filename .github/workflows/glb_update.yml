@@ -3,7 +3,7 @@ name: GLB File Update Automation
 on:
   push:
     branches:
-      - 'glb_update'
+      - 'assets-glb'
     paths:
       - 'assets/models/*.glb'
 
@@ -13,9 +13,10 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4  # Updated to the latest version
         with:
           ref: ${{ github.ref }}
+          fetch-depth: 2  # Fetch the last two commits to enable git diff
 
       - name: Parse FTP Credentials
         id: ftp_creds
@@ -40,7 +41,7 @@ jobs:
       - name: Update Main HTML File
         if: steps.get_glb_files.outputs.updated_glb_file != ''
         run: |
-          MAIN_HTML_FILE="AframeTest.html"  # Adjust the path if your HTML file is located elsewhere
+          MAIN_HTML_FILE="AframeTest.html"  # Adjust if your HTML file is in a different location
           GLB_FILENAME=$(basename "${{ steps.get_glb_files.outputs.updated_glb_file }}")
           echo "Updating HTML file to use GLB file: $GLB_FILENAME"
           # Update the gltf-model attribute in the HTML file
@@ -48,23 +49,25 @@ jobs:
           # Show the updated line for verification
           grep 'gltf-model' "$MAIN_HTML_FILE"
 
-      # Optional: Commit and push changes back to the repository
+      # Optional: Commit and Push Changes Back to the Repository
       - name: Commit and Push Changes
         if: steps.get_glb_files.outputs.updated_glb_file != ''
-        uses: stefanzweifel/git-auto-commit-action@v4
+        uses: stefanzweifel/git-auto-commit-action@v5  # Updated to the latest version
         with:
           commit_message: 'Update main HTML file to reference new GLB model'
           branch: ${{ github.ref }}
-          file_pattern: index.html
+          file_pattern: AframeTest.html
+          # Personal access token with repo permissions is required
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Deploy via FTP
-        uses: SamKirkland/FTP-Deploy-Action@4.3.0
+        uses: SamKirkland/FTP-Deploy-Action@4.3.1  # Updated to the latest version
         with:
           server: ${{ steps.ftp_creds.outputs.server }}
           username: ${{ steps.ftp_creds.outputs.username }}
           password: ${{ steps.ftp_creds.outputs.password }}
           protocol: ftp
           local-dir: .  # Deploy all files in the repository
-          server-dir: /public_html/assets/models  # Adjust to your server's web root or desired directory
+          server-dir: /public_html  # Adjust to your server's web root or desired directory
           concurrency: 10
           security: false
