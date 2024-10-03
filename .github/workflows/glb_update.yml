@@ -69,7 +69,7 @@ jobs:
           password: ${{ steps.ftp_creds.outputs.password }}
           protocol: ftp
           port: ${{ secrets.FTP_PORT }}
-          local-dir: .  # Root directory
+          local-dir: ./  # Root directory
           server-dir: ${{ secrets.FTP_PATH }}
           security: loose
           exclude: |
