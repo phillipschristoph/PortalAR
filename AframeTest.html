@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>A-Frame GLB Model with Animation</title>
+    <meta name="description" content="A-Frame GLB Model with Animation">
+    <!-- Include A-Frame library -->
+    <script src="https://aframe.io/releases/1.4.1/aframe.min.js"></script>    <!-- Include Animation-Mixer Component -->
+    <!-- <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script> -->
+    <script src="https://cdn.jsdelivr.net/npm/aframe-extras@6.1.1/dist/aframe-extras.min.js"></script>
+  </head>
+  <body>
+    <!-- A-Frame Scene -->
+    <a-scene>
+      <!-- Sky Background -->
+      <!-- <a-sky color="#ECECEC"></a-sky> -->
+
+      <!-- GLB Model Entity with Animation -->
+      <a-entity
+        id="model"
+        gltf-model="assets/models/WWcompressed8.glb"
+        animation-mixer="clip: Animation"
+        position="0 0 -5"
+        rotation="0 0 0"
+        scale="1 1 1">
+      </a-entity>
+
+      <!-- Hemisphere Light -->
+      <a-entity
+        light="type: hemisphere; color: #ffeeb1; groundColor: #080820; intensity: 0.7"
+        position="0 50 0">
+      </a-entity>
+
+      <!-- Directional Light (Sunlight) -->
+      <a-entity
+        id="sunLight"
+        light="type: directional; color: #ffddaa; intensity: 1.5; castShadow: true"
+        position="0 1 0">
+      </a-entity>
+
+      <!-- Camera Entity with Controls -->
+      <a-entity
+        camera
+        look-controls
+        position="0 1.6 0">
+      </a-entity>
+    </a-scene>
+
+    <!-- Custom Script to Disable Frustum Culling on SkinnedMesh -->
+    <script>
+      // Wait for the scene to load
+      document.addEventListener('DOMContentLoaded', () => {
+        const modelEl = document.querySelector('#model');
+
+        modelEl.addEventListener('model-loaded', (e) => {
+          // Get the loaded model
+          const model = e.detail.model;
+
+          model.traverse((node) => {
+            if (node.isSkinnedMesh) {
+              node.frustumCulled = false;
+            }
+          });
+        });
+      });
+    </script>
+  </body>
+</html>
